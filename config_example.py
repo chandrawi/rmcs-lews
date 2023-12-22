@@ -1,7 +1,7 @@
 DATABASE = {
     "url_auth" : "postgres://postgres:password@127.0.0.1:5432/test_rmcs_auth",
     "url_resource" : "postgres://postgres:password@127.0.0.1:5432/test_rmcs_resource",
-    "url_secondary": "postgres://postgres:password@127.0.0.1:5432/defaultdb"
+    "url_external": "postgres://postgres:password@127.0.0.1:5432/defaultdb"
 }
 
 SERVER_LOCAL = {

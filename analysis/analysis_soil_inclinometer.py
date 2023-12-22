@@ -143,7 +143,7 @@ while True:
     for i in range(number):
         ax = get_i16_value(buffers[i].data[0], devices[i].offset_x)
         ay = get_i16_value(buffers[i].data[1], devices[i].offset_y)
-        az = get_i16_value(buffers[i].data[2], devices[i].offset_z)
+        az = get_i16_value(buffers[i].data[2], devices[i].offset_z) + 4096
 
         angle_x = math.atan(ax / math.sqrt(ay * ay + az * az))
         angle_z = math.atan(az / math.sqrt(ax * ax + ay * ay))

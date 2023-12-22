@@ -320,7 +320,8 @@ DEVICES = [
         "rain gauge testing",
         "rain_gauge",
         [
-            DeviceConfig("slave_id", 0x90, "COMMUNICATION")
+            DeviceConfig("slave_id", 0x90, "COMMUNICATION"),
+            DeviceConfig("coefficient", 0.1, "COMMUNICATION")
         ]
     ),
     Device(
