@@ -84,7 +84,7 @@ while True:
             print("{0}    {1}  {2:3d}    {3}".format(now_str, device.id, device.slave_id, data))
 
             # Create buffer with data from request data
-            resource.create_buffer(device.id, device.model, now, data, "ANALYZE_GATEWAY")
+            resource.create_buffer(device.id, device.model, now, data, "ANALYSIS_1")
 
         except Exception as error:
             print(error)

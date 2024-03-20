@@ -99,7 +99,7 @@ def get_i16_value(u16_value: int, offset: int) -> int:
 while True:
 
     # read buffers based on raw model limited by device number
-    buffers = resource.list_buffer_first(number, None, model_raw.id, "ANALYZE_GATEWAY")
+    buffers = resource.list_buffer_first(number, None, model_raw.id, "ANALYSIS_1")
     # wait some moment when available buffers lower than device number
     if number > len(buffers):
         time.sleep(config.TIMING['analysis_sleep'])

@@ -69,7 +69,7 @@ def get_i16_value(u16_value: int, offset: int) -> int:
 while True:
 
     # read buffer based on raw model
-    buffers = resource.list_buffer_first(10, None, model_raw.id, "ANALYZE_GATEWAY")
+    buffers = resource.list_buffer_first(10, None, model_raw.id, "ANALYSIS_1")
     # wait some moment when buffer is unavailable
     if len(buffers) == 0:
         time.sleep(config.TIMING['analysis_sleep'])
