@@ -30,7 +30,8 @@ API = {
 
 GATEWAY_MODBUS = {
     "id": "00000000-0000-0000-0000-000000000000",
-    "period_time": 60
+    "period_time": 60,
+    "serial_port": "/dev/ttyS0"
 }
 
 TIMING = {

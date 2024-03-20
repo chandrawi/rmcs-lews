@@ -19,7 +19,7 @@ class DeviceMap:
     type: str
 
 # create client object
-client = ModbusSerialClient("/dev/ttyS7", baudrate=9600)
+client = ModbusSerialClient(config.GATEWAY_MODBUS['serial_port'], baudrate=9600)
 # connect to device
 client.connect()
 
