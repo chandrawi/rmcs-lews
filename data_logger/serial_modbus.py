@@ -7,19 +7,25 @@ import config
 
 ser = serial.Serial(config.GATEWAY_MODBUS['serial_port'], 9600, timeout=1)
 
-# Soil inclinometer X, Y, and Z acceleration with 0x01 address
-ser.write(b"\x01\x04\x00\x00\x00\x03\xB0\x0B")
-s = ser.read(11)
-accel_x = s[3] * 2**8 + s[4]
-accel_y = s[5] * 2**8 + s[6]
-accel_z = s[7] * 2**8 + s[8]
-if accel_x >= 2**15 : accel_x = accel_x - 2**16
-if accel_y >= 2**15 : accel_y = accel_y - 2**16
-if accel_z >= 2**15 : accel_z = accel_z - 2**16
+# Soil inclinometer X, Y, and Z acceleration with 0x01 to 0x05 addresses
 print("Soil Inclinometer")
-print("    Acceleration X: {}".format(accel_x))
-print("    Acceleration Y: {}".format(accel_y))
-print("    Acceleration Z: {}".format(accel_z))
+commands = [
+    b"\x01\x04\x00\x00\x00\x03\xB0\x0B",
+    b"\x02\x04\x00\x00\x00\x03\xB0\x38",
+    b"\x03\x04\x00\x00\x00\x03\xB1\xE9",
+    b"\x04\x04\x00\x00\x00\x03\xB0\x5E",
+    b"\x05\x04\x00\x00\x00\x03\xB1\x8F"
+]
+for i, command in enumerate(commands):
+    ser.write(command)
+    s = ser.read(11)
+    accel_x = s[3] * 2**8 + s[4]
+    accel_y = s[5] * 2**8 + s[6]
+    accel_z = s[7] * 2**8 + s[8]
+    if accel_x >= 2**15 : accel_x = accel_x - 2**16
+    if accel_y >= 2**15 : accel_y = accel_y - 2**16
+    if accel_z >= 2**15 : accel_z = accel_z - 2**16
+    print("    Acceleration {0:1d} (X|Y|Z): {1:5d} | {2:5d} | {3:5d}".format(i, accel_x, accel_y, accel_z))
 
 # HPT64 Piezometer pressure and level with 0x80 address 
 ser.write(b"\x80\x04\x00\x10\x00\x06\x6F\xDC")
