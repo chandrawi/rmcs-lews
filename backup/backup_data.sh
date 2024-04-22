@@ -89,12 +89,14 @@ if [[ FILTER_FLAG -gt 0 ]]; then
         QUERY+=" AND \"${COL_ID}\" IN ${FILTER_ID}"
     fi
 fi
+QUERY+=" ORDER BY $COL_TS ASC"
 echo $QUERY
 
 # create backup directory and prepare backup file output path
 BACKUP_DIRECTORY+="/$PREFIX"
 mkdir -p $BACKUP_DIRECTORY
-BACKUP_PATH="${BACKUP_DIRECTORY}/${PREFIX}_${BEGIN}"
+DATETIME=$(date +'%Y-%m-%d_%H-%M-%S_%z' -d "@$BEGIN_SEC")
+BACKUP_PATH="${BACKUP_DIRECTORY}/${PREFIX}_${DATETIME}"
 if [[ FILTER_FLAG -gt 0 ]]; then BACKUP_PATH+="_${SUFFIX}"; fi
 BACKUP_PATH+=".csv"
 echo $BACKUP_PATH

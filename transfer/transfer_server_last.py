@@ -5,8 +5,9 @@ from dataclasses import dataclass
 import time
 from datetime import datetime
 from uuid import UUID
+import grpc
 from rmcs_api_client.auth import Auth
-from rmcs_api_client.resource import Resource
+from rmcs_api_client.resource import Resource, DeviceSchema
 import config
 
 
@@ -39,12 +40,14 @@ for token in login_main.access_tokens:
     print("access_token  = {}".format(token.access_token))
     print("refresh_token = {}".format(token.refresh_token))
 
-# read devices on a gateway
-gateway_id = UUID(config.GATEWAY_MODBUS['id'])
-devices = resource.list_device_by_gateway(gateway_id)
-for index, device in enumerate(devices):
-    if device.id == device.gateway_id:
-        devices.pop(index)
+# read devices on the gateways
+devices: list[DeviceSchema] = []
+for gateway_id in config.GATEWAYS:
+    device_list = resource.list_device_by_gateway(UUID(gateway_id))
+    for index, device in enumerate(device_list):
+        if device.id == device.gateway_id:
+            device_list.pop(index)
+    devices = devices + device_list
 
 print("DEVICES:")
 device_map = {}
@@ -54,7 +57,21 @@ for device in devices:
 
 while True:
 
-    buffers = resource.list_buffer_first(100, None, None, "TRANSFER_GATEWAY")
+    buffers = []
+    try:
+        buffers = resource.list_buffer_last(200, None, None, "TRANSFER_SERVER")
+    except grpc.RpcError as error:
+        if error.code() == grpc.StatusCode.UNAUTHENTICATED:
+            login = auth.user_login(config.SERVER_LOCAL['admin_name'], config.SERVER_LOCAL['admin_password'])
+            resource = Resource(address_resource, login.access_tokens[0].access_token)
+            print("RELOGIN LOCAL")
+        continue
+
+    # Only transfer if number buffers is greater or equal than 200
+    if len(buffers) == 200:
+        buffers = buffers[:100]
+    else:
+        buffers = []
 
     for buffer in buffers:
 
@@ -65,40 +82,36 @@ while True:
                 resource.delete_buffer(buffer.id)
                 continue
             print("{}    {}    {}".format(time_str, buffer.device_id, device_map[buffer.device_id]))
-        except Exception as error:
+        except grpc.RpcError as error:
             print(error)
-
-        # try to create data on local database
-        local_exist = True
-        try:
-            resource.create_data(buffer.device_id, buffer.model_id, buffer.timestamp, buffer.data)
-        except Exception as error:
-            print(error)
-            # check if data already exist
-            try:
-                resource.read_data(buffer.device_id, buffer.model_id, buffer.timestamp)
-            except Exception as error:
-                local_exist = False
-                print(error)
 
         # try to create buffer on main server database
         main_exist = True
         try:
-            resource_main.create_buffer(buffer.device_id, buffer.model_id, buffer.timestamp, buffer.data, "TRANSFER_SERVER")
-        except Exception as error:
-            print(error)
-            # check if buffer already exist
-            try:
-                resource_main.read_buffer_by_time(buffer.device_id, buffer.model_id, buffer.timestamp)
-            except Exception as error:
-                main_exist = False
+            resource_main.create_buffer(buffer.device_id, buffer.model_id, buffer.timestamp, buffer.data, "TRANSFER_LOCAL")
+        except grpc.RpcError as error:
+            if error.code() == grpc.StatusCode.UNAUTHENTICATED:
+                login_main = auth_main.user_login(config.SERVER_MAIN['admin_name'], config.SERVER_MAIN['admin_password'])
+                resource_main = Resource(address_resource, login_main.access_tokens[0].access_token)
+                print("RELOGIN MAIN")
+                break
+            elif error.code() == grpc.StatusCode.UNAVAILABLE:
+                print("UNAVAILABLE")
+                break
+            else:
                 print(error)
+                # check if buffer already exist
+                try:
+                    resource_main.read_buffer_by_time(buffer.device_id, buffer.model_id, buffer.timestamp)
+                except grpc.RpcError as error:
+                    main_exist = False
+                    print(error)
 
-        # delete buffer only if data on local and buffer on main exists
-        if local_exist and main_exist:
+        # delete buffer only if buffer on main exists
+        if main_exist:
             try:
                 resource.delete_buffer(buffer.id)
-            except Exception as error:
+            except grpc.RpcError as error:
                 print(error)
 
     time.sleep(config.TIMING['transfer_sleep'])
