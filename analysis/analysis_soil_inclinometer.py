@@ -119,7 +119,7 @@ while True:
         # remove some first buffers if buffer set invalid
         for buffer in buffer_set:
             try:
-                resource.update_buffer(buffer.id, None, "TRANSFER_GATEWAY")
+                resource.update_buffer(buffer.id, None, "TRANSFER_LOCAL")
             except Exception as error:
                 print(error)
         continue
@@ -158,7 +158,7 @@ while True:
         data = [ax/4096.0, ay/4096.0, az/4096.0, angle_x, angle_z, displacement_x, displacement_z]
         try:
             print("{}    {}    {}".format(time_str, devices[i].id, data))
-            resource.create_buffer(devices[i].id, model_data.id, buffers[i].timestamp, data, "TRANSFER_GATEWAY")
-            resource.update_buffer(buffers[i].id, None, "TRANSFER_GATEWAY")
+            resource.create_buffer(devices[i].id, model_data.id, buffers[i].timestamp, data, "TRANSFER_LOCAL")
+            resource.update_buffer(buffers[i].id, None, "TRANSFER_LOCAL")
         except Exception as error:
             print(error)

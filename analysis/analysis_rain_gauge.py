@@ -89,7 +89,7 @@ while True:
         time_str = buffer.timestamp.strftime("%Y-%m-%d %H:%M:%S")
         try:
             print("{}    {}    {}".format(time_str, buffer.device_id, data))
-            resource.create_buffer(buffer.device_id, model_data.id, buffer.timestamp, data, "TRANSFER_GATEWAY")
-            resource.update_buffer(buffer.id, None, "TRANSFER_GATEWAY")
+            resource.create_buffer(buffer.device_id, model_data.id, buffer.timestamp, data, "TRANSFER_LOCAL")
+            resource.update_buffer(buffer.id, None, "TRANSFER_LOCAL")
         except Exception as error:
             print(error)

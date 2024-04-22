@@ -23,6 +23,15 @@ do
 
 	fi
 
+	analysis_rag=$(pgrep -a python | grep -c /opt/rmcs-gateway/analysis/analysis_rain_gauge.py)
+	if [ $analysis_rag -eq 0 ]
+	then
+
+		printf "rerun rain gauge analysis script...\n"
+		sudo /opt/rmcs-gateway/.venv/bin/python /opt/rmcs-gateway/analysis/analysis_rain_gauge.py &
+
+	fi
+
 	sleep 5
 
 done

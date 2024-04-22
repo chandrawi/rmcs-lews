@@ -6,7 +6,7 @@ CONF_FILE="${SCRIPT_DIR}/config.sh"
 source $CONF_FILE
 
 # get variables from argument to replace configuration variables
-while getopts u:p:b:e:t:d:D:M:R:X flag
+while getopts u:p:b:e:t:d:D:M:a:r:X flag
 do
     case "${flag}" in
         u) DB_URL=${OPTARG};;
@@ -17,7 +17,8 @@ do
         d) BACKUP_DIRECTORY=${OPTARG};;
         D) GROUP_DEVICE=${OPTARG};;
         M) GROUP_MODEL=${OPTARG};;
-        R) REPLACE_STATUS=${OPTARG};;
+        a) ADD_STATUS=${OPTARG};;
+        r) REPLACE_STATUS=${OPTARG};;
         X) DELETE_FLAG=1;;
     esac
 done
@@ -43,6 +44,10 @@ fi
 COLUMNS="\"device_id\",\"model_id\",\"timestamp\",\"data\""
 COL_TS="\"timestamp\""
 PREFIX="data"
+if [[ $ADD_STATUS =~ ^[0-9]+$ ]]; then
+    COLUMNS="\"device_id\",\"model_id\",\"timestamp\",\"data\",$ADD_STATUS AS \"status\""
+    PREFIX="buffer"
+fi
 if [ $BACKUP_TABLE = "data_buffer" ]; then
     COLUMNS="\"device_id\",\"model_id\",\"timestamp\",\"data\",\"status\""
     if [[ $REPLACE_STATUS =~ ^[0-9]+$ ]]; then
