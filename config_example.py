@@ -43,4 +43,13 @@ TIMING = {
     "analysis_sleep": 1
 }
 
+STATUS = {
+    "logger_modbus_end": "ANALYSIS_1",
+    "transfer_local_raw": "DELETE",
+    "transfer_local_end": "TRANSFER_SERVER",
+    "transfer_server_end": "DELETE",
+    "transfer_external_db_begin": "EXTERNAL_OUTPUT",
+    "transfer_external_db_end": "DELETE"
+}
+
 SOIL_INCLINOMETER_GROUP_ID = "00000000-0000-0000-0000-000000000000"

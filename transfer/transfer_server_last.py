@@ -59,7 +59,7 @@ while True:
 
     buffers = []
     try:
-        buffers = resource.list_buffer_last(200, None, None, "TRANSFER_SERVER")
+        buffers = resource.list_buffer_last(50, None, None, "TRANSFER_SERVER")
     except grpc.RpcError as error:
         if error.code() == grpc.StatusCode.UNAUTHENTICATED:
             login = auth.user_login(config.SERVER_LOCAL['admin_name'], config.SERVER_LOCAL['admin_password'])
@@ -67,9 +67,9 @@ while True:
             print("RELOGIN LOCAL")
         continue
 
-    # Only transfer if number buffers is greater or equal than 200
-    if len(buffers) == 200:
-        buffers = buffers[:100]
+    # Only transfer if number buffers is greater or equal than 50
+    if len(buffers) == 50:
+        buffers = buffers[:25]
     else:
         buffers = []
 
@@ -107,10 +107,13 @@ while True:
                     main_exist = False
                     print(error)
 
-        # delete buffer only if buffer on main exists
+        # delete or update status based on configuration only if buffer on main exists
         if main_exist:
             try:
-                resource.delete_buffer(buffer.id)
+                if config.STATUS['transfer_server_end'] == "DELETE":
+                    resource.delete_buffer(buffer.id)
+                else:
+                    resource.update_buffer(buffer.id, None, config.STATUS['transfer_server_end'])
             except grpc.RpcError as error:
                 print(error)
 
