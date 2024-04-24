@@ -79,13 +79,16 @@ def read_piezometer(
 def create_rain_gauge(
         device_id: UUID, 
         timestamp: datetime, 
+        rain_yesterday: float, 
+        rain_today: float, 
+        rain_last_hour: float, 
         rain_hourly: float
     ):
     query = """
-        INSERT INTO data_rain_gauge (id, timestamp, rain_hourly) 
-        VALUES (%s, %s, %s);
+        INSERT INTO data_rain_gauge (id, timestamp, rain_yesterday, rain_today, rain_last_hour, rain_hourly) 
+        VALUES (%s, %s, %s, %s, %s, %s);
         """
-    params = (device_id, timestamp, rain_hourly)
+    params = (device_id, timestamp, rain_yesterday, rain_today, rain_last_hour, rain_hourly)
     execute(query, params)
 
 def read_rain_gauge(
@@ -93,7 +96,7 @@ def read_rain_gauge(
         timestamp: datetime
     ):
     query = """
-        SELECT id, timestamp, rain_hourly
+        SELECT id, timestamp, rain_yesterday, rain_today, rain_last_hour, rain_hourly
         FROM data_rain_gauge
         WHERE id=%s AND timestamp=%s;
         """
@@ -128,47 +131,23 @@ def read_environment_sensor(
 
 def transfer_external_server(model: ModelSchema, device_id: UUID, timestamp: datetime, data: list):
     if model.name == "XZ-axis soil inclinometer":
-        try:
-            create_soil_inclinometer(device_id, timestamp, data[0], data[1], data[2], data[3], data[4], data[5], data[6])
-        except Exception as error:
-            print(error)
+        return create_soil_inclinometer(device_id, timestamp, data[0], data[1], data[2], data[3], data[4], data[5], data[6])
     elif model.name == "piezometer data":
-        try:
-            create_piezometer(device_id, timestamp, data[0], data[1])
-        except Exception as error:
-            print(error)
+        return create_piezometer(device_id, timestamp, data[0], data[1])
     elif model.name == "rain gauge data":
-        try:
-            create_rain_gauge(device_id, timestamp, data[3])
-        except Exception as error:
-            print(error)
+        return create_rain_gauge(device_id, timestamp, data[0], data[1], data[2], data[3])
     elif model.name == "environment sensor data":
-        try:
-            create_environment_sensor(device_id, timestamp, data[0], data[1], data[2])
-        except Exception as error:
-            print(error)
+        return create_environment_sensor(device_id, timestamp, data[0], data[1], data[2])
 
 def check_external_server(model: ModelSchema, device_id: UUID, timestamp: datetime):
     if model.name == "XZ-axis soil inclinometer":
-        try:
-            if read_soil_inclinometer(device_id, timestamp) != None: return True
-        except Exception as error:
-            print(error)
+        if read_soil_inclinometer(device_id, timestamp) != None: return True
     elif model.name == "piezometer data":
-        try:
-            if read_piezometer(device_id, timestamp) != None: return True
-        except Exception as error:
-            print(error)
+        if read_piezometer(device_id, timestamp) != None: return True
     elif model.name == "rain gauge data":
-        try:
-            if read_rain_gauge(device_id, timestamp) != None: return True
-        except Exception as error:
-            print(error)
+        if read_rain_gauge(device_id, timestamp) != None: return True
     elif model.name == "environment sensor data":
-        try:
-            if read_environment_sensor(device_id, timestamp) != None: return True
-        except Exception as error:
-            print(error)
+        if read_environment_sensor(device_id, timestamp) != None: return True
     return False
 
 
@@ -216,7 +195,7 @@ for device in devices:
 while True:
 
     # read buffers
-    buffers = resource.list_buffer_last(10, None, None, "BACKUP")
+    buffers = resource.list_buffer_first(10, None, None, "EXTERNAL_OUTPUT")
 
     # create data from buffer
     for buffer in buffers:
@@ -235,17 +214,19 @@ while True:
             print(error)
 
         # try to transfer data to external database only for buffer data
-        external_exist = True
+        external_exist = False
         try:
             if buffer.model_id in model_data_map:
                 transfer_external_server(model_data_map[buffer.model_id], buffer.device_id, buffer.timestamp, buffer.data)
+                external_exist = True
         except Exception as error:
             print(error)
+            print("ERROR INSERT")
             # check if data on external server already exist
             try:
                 external_exist = check_external_server(model_data_map[buffer.model_id], buffer.device_id, buffer.timestamp)
             except Exception as error:
-                external_exist = False
+                print("ERROR READ")
                 print(error)
 
         # delete buffer only if data on local and data on external server exists
